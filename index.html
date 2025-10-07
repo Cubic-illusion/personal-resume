@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Hub - Retro Desktop</title>
+    <style>
+        /* --- FONTS & BASIC SETUP --- */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'MS Sans Serif', Arial, sans-serif; /* Classic Windows Font */
+            background: #008080; /* Teal Background */
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- START: ADVANCED CRT & GLITCH EFFECTS --- */
+
+        .crt-effect {
+            background-color: #008080;
+            overflow: hidden;
+        }
+
+        /* 1. The Main Desktop Container (with periodic screen shake) */
+        .crt-effect .desktop {
+            animation: screen-shake 8s infinite;
+        }
+
+        @keyframes screen-shake {
+            0%, 2%, 100% { transform: translate(0, 0); }
+            0.5% { transform: translate(-2px, 1px); }
+            1%   { transform: translate(3px, 2px); }
+            1.5% { transform: translate(1px, -2px); }
+        }
+
+        /* 2. Rolling Scanline Overlay */
+        .crt-effect::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(to bottom, rgba(20,20,20,0) 50%, rgba(0,0,0,0.4) 50%);
+            background-size: 100% 4px;
+            z-index: 10001; /* Highest z-index */
+            pointer-events: none;
+            animation: scanline-roll 8s infinite linear;
+        }
+
+        @keyframes scanline-roll {
+            from { background-position-y: 0px; }
+            to { background-position-y: -200px; }
+        }
+
+        /* 3. Screen Curvature & Vignette */
+        .crt-effect::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background:
+                radial-gradient(circle at center, rgba(0,0,0,0) , rgba(0,0,0,0) 50%, rgba(0,0,0,0.6) 95%),
+                radial-gradient(ellipse at center, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 40%);
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        /* 4. Animated Noise/Static Layer */
+        .crt-noise {
+            position: fixed;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            z-index: 9999;
+            pointer-events: none;
+            background: transparent url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJiZlRleHR1cmUiIHg9IjAiIHk9IjAiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjgiIG51bU9jdGF2ZXM9IjEiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsdGVyPSJ1cmwoI2JmVGV4dHVyZSkiLz48L3N2Zz4=') repeat;
+            animation: static-flicker 1s infinite steps(2);
+        }
+
+        @keyframes static-flicker {
+            0% { opacity: 0.05; } 20% { opacity: 0.1; } 40% { opacity: 0.08; }
+            60% { opacity: 0.15; } 80% { opacity: 0.06; } 100% { opacity: 0.12; }
+        }
+        
+        /* --- DESKTOP & ICON STYLES --- */
+        .desktop {
+            height: 100vh;
+            padding: 10px;
+            position: relative;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 90px);
+            grid-auto-rows: 90px;
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .desktop-icon {
+            width: 80px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            padding: 5px;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(0, 0, 128, 0.3);
+            outline: 1px dotted white;
+        }
+
+        .desktop-icon.selected {
+            background: rgba(0, 0, 128, 0.5);
+            outline: 1px dotted white;
+        }
+
+        .icon-image {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-family: sans-serif;
+        }
+
+        .icon-label {
+            color: white;
+            font-size: 11px;
+            text-shadow: 1px 1px 2px black;
+            word-wrap: break-word;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        /* --- TASKBAR STYLES --- */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: #c0c0c0;
+            border-top: 2px solid #ffffff;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+            z-index: 5000;
+            box-shadow: inset 0 1px 0 #dfdfdf;
+        }
+
+        .start-button {
+            height: 32px;
+            padding: 0 20px;
+            background: #c0c0c0;
+            border: 2px outset #dfdfdf;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .start-button:active { border-style: inset; }
+
+        .start-logo {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #ff0000, #ffff00, #00ff00, #0000ff);
+            border-radius: 2px;
+        }
+
+        .taskbar-divider {
+            width: 2px;
+            height: 32px;
+            background: #808080;
+            margin: 0 5px;
+            box-shadow: 1px 0 0 #ffffff;
+        }
+
+        .taskbar-clock {
+            margin-left: auto;
+            padding: 0 10px;
+            height: 32px;
+            border: 2px inset #dfdfdf;
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+        }
+        
+        /* --- WINDOW STYLES --- */
+        
+        .window-content.animation-mode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* **MODIFIED: Removed overflow: hidden to fix particle clipping** */
+            background: #000;
+            padding: 0;
+        }
+
+        .window {
+            position: absolute;
+            background: #c0c0c0;
+            border: 2px outset #dfdfdf;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            display: none;
+            /* **MODIFIED: Sizing is now handled by specific IDs below** */
+            z-index: 100;
+        }
+
+        /* **MODIFIED: Consistent height with appropriate widths for each window** */
+        #window1 { width: 520px; height: 480px; top: 5%; left: 10%; } /* Tasks List */
+        #window2 { width: 560px; height: 480px; top: 15%; left: 15%; } /* AI Wordle */
+        #window3 { width: 640px; height: 480px; top: 10%; left: 25%; } /* Crescent Moon */
+        #window4 { width: 720px; height: 480px; top: 20%; left: 20%; } /* Adventure Game */
+
+
+        /* --- 1. NEW GTM "Boot-up" Animation --- */
+        .gtm-animation-container {
+            width: 300px; /* Adjusted for text */
+            height: 150px;
+        }
+        .gtm-animation-container svg {
+            width: 100%;
+            height: 100%;
+        }
+        /* Style for the GTM pixel font text */
+        .gtm-animation-container text {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 80px;
+            fill: #7F56D9; /* Signature purple color */
+            text-anchor: middle; /* Ensures letters are centered */
+        }
+
+        /* --- 2. Retro Wordle Animation --- */
+        #wordle-container {
+            border: 2px outset #fff;
+            padding: 10px;
+            background: #c0c0c0;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            /* Reverted: Removed transform scale */
+        }
+
+        .window.active {
+            display: block;
+            z-index: 200;
+        }
+
+        .window-titlebar {
+            background: linear-gradient(to right, #000080, #1084d0);
+            color: white;
+            padding: 3px 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .window-controls { display: flex; }
+        .window-button {
+            width: 18px;
+            height: 18px;
+            background: #c0c0c0;
+            border: 1px outset #dfdfdf;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            font-family: sans-serif;
+        }
+        .window-button:active { border-style: inset; }
+
+        .window-content {
+            padding: 20px;
+            background: white;
+            height: calc(100% - 28px);
+            border: 2px inset #dfdfdf;
+            margin: 2px;
+            color: #000;
+        }
+
+        .window-content h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #000080;
+        }
+        .window-content p {
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        
+        /* --- LOADING ANIMATION --- */
+        .loading-bar {
+            width: 100%;
+            height: 30px;
+            border: 2px inset #dfdfdf;
+            background: white;
+            margin: 20px 0;
+            padding: 2px;
+        }
+        .loading-fill {
+            height: 100%;
+            background: #000080;
+            width: 0%;
+            /* The animation is added via script to restart it */
+        }
+        .loading-fill.animate {
+            animation: load 2.5s forwards ease-out;
+        }
+        @keyframes load { to { width: 100%; } }
+
+        /* --- STACKING WINDOWS --- */
+        #window1 { top: 60px; left: 80px; }
+        #window2 { top: 100px; left: 120px; }
+        #window3 { top: 140px; left: 160px; }
+        #window4 { top: 180px; left: 200px; }
+        
+        /* --- START: FULLSCREEN TRANSITION & ANIMATION STYLES --- */
+        #transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9000; /* Below CRT effects, above desktop */
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        #transition-overlay.dark { background-color: #000; }
+        /* Retro Wordle background */
+        #transition-overlay.wordle-background { background-color: #008080; }
+
+        .animation-container { display: none; position: absolute; }
+
+        
+        /* --- 3. Retro 3D Moon Animation --- */
+        #model-container {
+            width: 100%;
+            height: 100%;
+        }
+        #model-container canvas {
+            display: block; /* Prevents extra space below the canvas */
+            image-rendering: pixelated; /* Ensures low-res render looks sharp */
+        }
+    
+        .tile { width: 60px; height: 60px; perspective: 1000px; }
+        .tile-content { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.4s; }
+        .tile.flipped .tile-content { transform: rotateX(180deg); }
+        .tile .front, .tile .back {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2rem; font-family: 'Press Start 2P', cursive;
+            color: white; backface-visibility: hidden; box-sizing: border-box;
+            border: 2px outset #fff;
+        }
+        .tile .front { background-color: #808080; } /* Gray front */
+        .tile .back { background-color: #808080; transform: rotateX(180deg); }
+        .back.yellow { background-color: #FFFF00; border-color: #fff; color: #000; }
+        .back.green { background-color: #008000; border-color: #fff; }
+
+        /* --- 3. Retro 3D Moon Animation --- */
+        #model-container canvas {
+            image-rendering: pixelated; /* Ensures low-res render looks sharp */
+        }
+        
+        /* --- 4. Retro Terminal Animation --- */
+        #terminal-container {
+            width: 100%; height: 100%; background-color: #000;
+            color: #00FF00; padding: 2rem;
+            box-sizing: border-box; text-align: left; z-index: 10;
+            font-family: 'Press Start 2P', cursive;
+        }
+        .cursor {
+            display: inline-block; width: 1ch; height: 1.5rem;
+            background-color: #00FF00; animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+    </style>
+</head>
+<body class="crt-effect">
+    
+    <div class="crt-noise"></div>
+    
+    <div id="desktop-ui">
+        <div class="desktop">
+            <div class="icon-grid">
+                <div class="desktop-icon" data-window="window1">
+                    <div class="icon-image">✅</div>
+                    <div class="icon-label">Tasks List</div>
+                </div>
+                
+                <div class="desktop-icon" data-window="window2">
+                    <div class="icon-image">🧠</div>
+                    <div class="icon-label">AI Wordle</div>
+                </div>
+                
+                <div class="desktop-icon" data-window="window3">
+                    <div class="icon-image">🌙</div>
+                    <div class="icon-label">Cresc Moon</div>
+                </div>
+                
+                <div class="desktop-icon" data-window="window4">
+                    <div class="icon-image">⚔️</div>
+                    <div class="icon-label">Adv Game</div>
+                </div>
+            </div>
+
+            <div class="window" id="window1" data-animation="gtm" data-url="https://gtm-three-liard.vercel.app">
+                <div class="window-titlebar"><span>Tasks List</span><div class="window-controls"><div class="window-button close">×</div></div></div>
+                <div class="window-content">
+                    <h2>Task Management Application</h2>
+                    <p>Organize your daily tasks and boost your productivity.</p>
+                    <div class="loading-bar"><div class="loading-fill"></div></div>
+                </div>
+            </div>
+
+            <div class="window" id="window2" data-animation="wordle" data-url="https://cubic-illusion.github.io/ai-wordle">
+                <div class="window-titlebar"><span>AI Wordle</span><div class="window-controls"><div class="window-button close">×</div></div></div>
+                <div class="window-content">
+                    <h2>AI-Powered Word Game</h2>
+                    <p>A retro-themed, AI-enhanced version of the popular word game.</p>
+                    <div class="loading-bar"><div class="loading-fill"></div></div>
+                </div>
+            </div>
+
+            <div class="window" id="window3" data-animation="moon" data-url="https://cubic-illusion.github.io/cresant-moon">
+                <div class="window-titlebar"><span>Crescent Moon</span><div class="window-controls"><div class="window-button close">×</div></div></div>
+                <div class="window-content">
+                    <h2>Interactive 3D Experience</h2>
+                    <p>Explore a low-resolution crescent moon visualization.</p>
+                    <div class="loading-bar"><div class="loading-fill"></div></div>
+                </div>
+            </div>
+
+            <div class="window" id="window4" data-animation="game" data-url="https://cubic-illusion.github.io/simple-click-to-play-game">
+                <div class="window-titlebar"><span>Adventure Game</span><div class="window-controls"><div class="window-button close">×</div></div></div>
+                <div class="window-content">
+                    <h2>Click-to-Play Adventure</h2>
+                    <p>Embark on a journey in this interactive text-based adventure.</p>
+                    <div class="loading-bar"><div class="loading-fill"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="taskbar">
+            <button class="start-button"><div class="start-logo"></div><span>Start</span></button>
+            <div class="taskbar-divider"></div>
+            <div class="taskbar-clock" id="clock">12:00 PM</div>
+        </div>
+    </div>
+
+    <div id="transition-overlay">
+        <div id="chest-container" class="animation-container">
+            <div class="chest-base"></div><div class="chest-lid"></div><div class="chest-lock"></div>
+        </div>
+        <div id="wordle-container" class="animation-container"></div>
+        <div id="model-container" class="animation-container"></div>
+        <div id="terminal-container" class="animation-container">
+            <span id="terminal-text">> </span><span class="cursor"></span>
+        </div>
+    </div>
+
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script type="importmap">
+    { "imports": {
+        "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/"
+    }}
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+        // --- DESKTOP UI LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            function updateClock() {
+                const now = new Date();
+                const hours = now.getHours() % 12 || 12;
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+                document.getElementById('clock').textContent = `${hours}:${minutes} ${ampm}`;
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            const icons = document.querySelectorAll('.desktop-icon');
+            let selectedIcon = null;
+            let lastClickTime = 0;
+            icons.forEach(icon => {
+                icon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const currentTime = new Date().getTime();
+                    const isDoubleClick = currentTime - lastClickTime < 300;
+                    if (selectedIcon && selectedIcon !== icon) selectedIcon.classList.remove('selected');
+                    icon.classList.add('selected');
+                    selectedIcon = icon;
+                    if (isDoubleClick) {
+                        const windowId = icon.dataset.window;
+                        if (windowId) openWindow(windowId);
+                    }
+                    lastClickTime = currentTime;
+                });
+            });
+
+            let highestZ = 200;
+            const windows = document.querySelectorAll('.window');
+            
+            function openWindow(windowId) {
+                const windowEl = document.getElementById(windowId);
+                if (windowEl) {
+                    const loadingFill = windowEl.querySelector('.loading-fill');
+                    if (loadingFill) {
+                        loadingFill.classList.remove('animate');
+                        void loadingFill.offsetWidth;
+                        loadingFill.classList.add('animate');
+                    }
+                    
+                    windowEl.style.display = 'block';
+                    bringToFront(windowEl);
+                    
+                    const animationType = windowEl.dataset.animation;
+                    const url = windowEl.dataset.url;
+                    
+                    if(animationType && url) {
+                        setTimeout(() => {
+                            if(windowEl.style.display === 'block') {
+                                runAnimationInWindow(windowEl, animationType, url);
+                            }
+                        }, 2500);
+                    }
+                }
+            }
+
+            function bringToFront(windowEl) {
+                windows.forEach(w => w.classList.remove('active'));
+                windowEl.classList.add('active');
+                highestZ++;
+                windowEl.style.zIndex = highestZ;
+            }
+
+            windows.forEach(windowEl => {
+                windowEl.addEventListener('mousedown', () => bringToFront(windowEl));
+                const closeBtn = windowEl.querySelector('.window-button.close');
+                if(closeBtn){
+                    closeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        windowEl.style.display = 'none';
+                    });
+                }
+            });
+
+            let activeWindow = null;
+            let offset = { x: 0, y: 0 };
+            document.querySelectorAll('.window-titlebar').forEach(titlebar => {
+                titlebar.addEventListener('mousedown', function(e) {
+                    activeWindow = this.closest('.window');
+                    bringToFront(activeWindow);
+                    offset.x = e.clientX - activeWindow.offsetLeft;
+                    offset.y = e.clientY - activeWindow.offsetTop;
+                });
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (activeWindow) {
+                    activeWindow.style.left = (e.clientX - offset.x) + 'px';
+                    activeWindow.style.top = (e.clientY - offset.y) + 'px';
+                }
+            });
+            document.addEventListener('mouseup', () => { activeWindow = null; });
+            document.querySelector('.desktop').addEventListener('click', () => {
+                if (selectedIcon) {
+                    selectedIcon.classList.remove('selected');
+                    selectedIcon = null;
+                }
+            });
+        });
+
+        function runAnimationInWindow(windowEl, animationType, url) {
+            const contentArea = windowEl.querySelector('.window-content');
+            if (!contentArea) return;
+
+            contentArea.innerHTML = '';
+            contentArea.classList.add('animation-mode');
+
+            switch (animationType) {
+                case 'gtm': // **MODIFIED**
+                    animateGTM(contentArea, url);
+                    break;
+                case 'wordle':
+                    animateWordle(contentArea, url);
+                    break;
+                case 'moon':
+                    animate3DModel(contentArea, url);
+                    break;
+                case 'game':
+                    animateTerminal(contentArea, url);
+                    break;
+            }
+        }
+
+        // --- NEW GTM/TASK LOGO ANIMATION ---
+        function animateGTM(container, url) {
+            // Create SVG container with <text> elements for a pixel font
+            const svgContainer = document.createElement('div');
+            svgContainer.className = 'gtm-animation-container';
+            svgContainer.innerHTML = `
+                <svg viewBox="0 0 300 150">
+                    <text id="g-letter" x="50"  y="100" opacity="0">G</text>
+                    <text id="t-letter" x="150" y="100" opacity="0">T</text>
+                    <text id="m-letter" x="250" y="100" opacity="0">M</text>
+                </svg>
+            `;
+            container.appendChild(svgContainer);
+
+            // This object will hold the text scrambling animation state
+            const textScramble = { g: '', t: '', m: '' };
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%&';
+
+            const tl = anime.timeline({
+                duration: 3800, // Total duration
+                complete: () => window.location.href = url
+            });
+
+            // 1. Make letters appear and start scrambling
+            tl.add({
+                targets: 'text',
+                opacity: 1,
+                translateY: [20, 0],
+                duration: 500,
+                delay: anime.stagger(150),
+                easing: 'easeOutQuad'
+            })
+            // 2. Animate the text content from random chars to the final letter
+            .add({
+                targets: textScramble,
+                // Animate a dummy property to run the update function
+                g: 'G',
+                t: 'T',
+                m: 'M',
+                duration: 1500,
+                easing: 'linear',
+                update: function () {
+                    const gEl = document.getElementById('g-letter');
+                    const tEl = document.getElementById('t-letter');
+                    const mEl = document.getElementById('m-letter');
+
+                    // On each frame, update text content with random chars
+                    // until it "locks in" to the final letter
+                    gEl.textContent = textScramble.g ? 'G' : chars.charAt(Math.floor(Math.random() * chars.length));
+                    tEl.textContent = textScramble.t ? 'T' : chars.charAt(Math.floor(Math.random() * chars.length));
+                    mEl.textContent = textScramble.m ? 'M' : chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+            }, '-=200') // Overlap with the fade-in
+            // 3. Ensure final letters are correctly set
+            .add({
+                targets: 'text',
+                duration: 1,
+                begin: function() {
+                    document.getElementById('g-letter').textContent = 'G';
+                    document.getElementById('t-letter').textContent = 'T';
+                    document.getElementById('m-letter').textContent = 'M';
+                }
+            })
+            // 4. Letters glitch and fade out
+            .add({
+                targets: 'text',
+                opacity: 0,
+                translateY: [0, -10, 0, 10, 0], // Jitter effect
+                scale: 0.8,
+                duration: 800,
+                delay: anime.stagger(100),
+                easing: 'easeInOutQuad'
+            }, '+=500'); // Hold the final text for 500ms before fading
+        }
+
+        function animateWordle(container, url) {
+            const wordleContainer = document.createElement('div');
+            wordleContainer.id = 'wordle-container';
+            const word = "LOADS";
+            for (let i = 0; i < 5; i++) {
+                const tile = document.createElement('div');
+                tile.classList.add('tile');
+                tile.innerHTML = `<div class="tile-content"><div class="front"></div><div class="back">${word[i]}</div></div>`;
+                wordleContainer.appendChild(tile);
+            }
+            container.appendChild(wordleContainer);
+            container.style.backgroundColor = "#008080";
+            
+            const tiles = wordleContainer.querySelectorAll('.tile');
+            const flipSpeed = 250, revealPause = 400, flipDuration = 400, greenStagger = 150;
+            
+            tiles.forEach((tile, index) => {
+                setTimeout(() => {
+                    tile.querySelector('.back').classList.add('yellow');
+                    tile.classList.add('flipped');
+                }, index * flipSpeed);
+            });
+            const stage1Duration = (tiles.length - 1) * flipSpeed + flipDuration;
+
+            tiles.forEach((tile, index) => {
+                setTimeout(() => {
+                    tile.classList.remove('flipped');
+                    setTimeout(() => {
+                        const backFace = tile.querySelector('.back');
+                        backFace.classList.remove('yellow');
+                        backFace.classList.add('green');
+                        tile.classList.add('flipped');
+                    }, flipDuration);
+                }, stage1Duration + revealPause + (index * greenStagger));
+            });
+
+            const stage2Duration = (tiles.length - 1) * greenStagger + (flipDuration * 2);
+            setTimeout(() => {
+                window.location.href = url;
+            }, stage1Duration + revealPause + stage2Duration);
+        }
+
+        function animate3DModel(container, url) {
+            const scene = new THREE.Scene();
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false });
+            renderer.setSize(width / 2, height / 2, false);
+            renderer.domElement.style.width = '100%';
+            renderer.domElement.style.height = '100%';
+            container.appendChild(renderer.domElement);
+
+            scene.add(createRetroStars());
+            scene.add(new THREE.AmbientLight(0xffffff, 0.1));
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            directionalLight.position.set(0, 0, 10);
+            scene.add(directionalLight);
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableZoom = false;
+            controls.enableRotate = false;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+
+            const startZoom = 5, endZoom = 1.2, zoomSpeed = 0.02;
+            camera.position.z = startZoom;
+            let isRedirecting = false;
+            
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('https://unpkg.com/three@0.157.0/examples/jsm/libs/draco/');
+            const loader = new GLTFLoader();
+            loader.setDRACOLoader(dracoLoader);
+
+            loader.load('my-model.glb', (gltf) => {
+                const model = gltf.scene;
+                scene.add(model);
+                animate();
+            }, undefined, (error) => {
+                container.innerHTML = '<p style="color:red; font-family:\'Press Start 2P\';">Load Error</p>';
+            });
+
+            function animate() {
+                if (isRedirecting) return;
+                if (camera.position.z > endZoom) {
+                    camera.position.z -= zoomSpeed;
+                } else {
+                    isRedirecting = true;
+                    setTimeout(() => window.location.href = url, 500);
+                    return;
+                }
+                controls.update();
+                renderer.render(scene, camera);
+                requestAnimationFrame(animate);
+            }
+        }
+
+        function createRetroStars() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starVertices = [];
+            for (let i = 0; i < 1000; i++) {
+                const x = (Math.random() - 0.5) * 500;
+                const y = (Math.random() - 0.5) * 500;
+                const z = (Math.random() - 0.5) * 500;
+                starVertices.push(x, y, z);
+            }
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 2, sizeAttenuation: false });
+            return new THREE.Points(starGeometry, starMaterial);
+        }
+
+        function animateTerminal(container, url) {
+            container.style.backgroundColor = '#000';
+            container.style.fontFamily = "'Press Start 2P', cursive";
+            container.style.textAlign = 'left';
+            container.style.padding = '1rem';
+            container.style.color = '#00FF00';
+
+            const textEl = document.createElement('span');
+            const cursorEl = document.createElement('span');
+            cursorEl.className = 'cursor';
+            container.appendChild(textEl);
+            container.appendChild(cursorEl);
+
+            const textToType = "> Loading module...";
+            textEl.textContent = '';
+            let i = 0;
+            function typeWriter() {
+                if (i < textToType.length) {
+                    textEl.textContent += textToType.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 50);
+                } else {
+                    setTimeout(() => window.location.href = url, 500);
+                }
+            }6
+            typeWriter();
+        }
+    </script>
+</body>
+</html>
