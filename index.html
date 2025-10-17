@@ -304,46 +304,80 @@
             background-color: #00FF00; animation: blink 1s step-end infinite;
         }
         @keyframes blink { 50% { opacity: 0; } }
-
-        .canyon-road {
+        .canyon-container {
             width: 100%;
             height: 100%;
-            background: linear-gradient(#4a4a4a, #6b6b6b);
+            background: #5a8a2d;
             position: relative;
             overflow: hidden;
-            border: 10px solid #a58a58;
-            box-sizing: border-box;
+        }
+        .road {
+            width: 60%;
+            height: 100%;
+            background: #4a4a4a;
+            position: absolute;
+            left: 20%;
+            border-left: 10px dashed #c00;
+            border-right: 10px dashed #c00;
+            box-shadow: 
+                inset 10px 0 0 #fff, 
+                inset -10px 0 0 #fff;
         }
         .road-line {
-            width: 15px;
-            height: 80px;
+            width: 10px;
+            height: 50px;
             background: #ffc857;
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            animation: scroll-road 0.3s linear infinite;
+            animation: scroll-road 0.4s linear infinite;
+        }
+        .finish-line {
+            position: absolute;
+            width: 100%;
+            height: 30px;
+            background-image: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%);
+            background-size: 30px 30px;
+            animation: scroll-road 1.5s linear forwards;
+            animation-delay: 2s;
         }
         .car-sprite {
-            width: 80px;
-            height: 150px;
-            background-color: #c00;
-            border: 2px outset #fff;
+            width: 70px;
+            height: 130px;
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            animation: drive-car 4s ease-in-out forwards;
+            z-index: 10;
+            animation: drive-car-arcade 4s ease-in-out forwards;
+        }
+        .car-sprite {
+
+            width: 90px;
+            height: 160px;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            animation: drive-car-arcade 4s ease-in-out forwards;
+        }
+        .car-sprite img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         @keyframes scroll-road {
             from { top: -80px; }
-            to { top: 100%; }
+            to   { top: 100%; }
         }
-        @keyframes drive-car {
-            0%   { transform: translateX(-50%) translateY(0); }
-            20%  { transform: translateX(-150%) translateY(-50px) rotate(-10deg); }
-            40%  { transform: translateX(50%) translateY(-100px) rotate(10deg); }
-            60%  { transform: translateX(-100%) translateY(-200px) rotate(-5deg); }
-            100% { transform: translateX(-50%) translateY(-600px); }
+        @keyframes drive-car-arcade {
+            0%   { transform: translateX(-50%); }
+            20%  { transform: translateX(-180%); }
+            40%  { transform: translateX(80%); }
+            60%  { transform: translateX(-100%); }
+            80%  { transform: translateX(-50%); }
+            100% { bottom: 110%; }
         }
 
         .github-blueprint-container {
@@ -650,8 +684,21 @@
             typeWriter();
         }
         function animateCanyonDrive(container, url) {
-            container.innerHTML = `<div class="canyon-road"><div class="road-line"></div><div class.car-sprite"></div></div>`;
-            setTimeout(() => { window.location.href = url; }, 4000);
+            container.innerHTML = `
+                <div class="canyon-container">
+                    <div class="road">
+                        <div class="road-line"></div>
+                        <div class="road-line" style="animation-delay: -0.2s;"></div>
+                        <div class="finish-line"></div>
+                    </div>
+                    <div class="car-sprite">
+                        <img src="race-car.png" alt="Race Car">
+                    </div>
+                </div>
+            `;
+            setTimeout(() => {
+                window.location.href = url;
+            }, 1500);
         }
         function animateGitHub(container, url) {
             const svgContainer = document.createElement('div');
